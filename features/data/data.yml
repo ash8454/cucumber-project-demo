@@ -1,0 +1,92 @@
+record1:
+  username: selenium
+  password: selenium
+  trip_type: one way
+  no_of_passengers: 1
+  depart_city: London
+  depart_month: October
+  depart_day: 21
+  arrival_city: New York
+  return_month: November
+  return_day: 28
+  service_class: Business
+  airline: No Preference
+  depart_flight: Pangea Airlines$362
+  return_flight: Unified Airlines$633
+  passenger1_first_name: Don
+  passenger1_last_name: Robert
+  passenger2_first_name: Kelly
+  passenger2_last_name: Robert
+  credit_card_type: Visa
+  credit_card_number: 514123
+record2:
+  username: testing
+  password: testing
+  trip_type: round trip
+  no_of_passengers: 2
+  depart_city: New York
+  depart_month: October
+  depart_day: 25
+  arrival_city: Paris
+  return_month: December
+  return_day: 28
+  service_class: First
+  airline: No Preference
+  depart_flight: Pangea Airlines$362
+  return_flight: Unified Airlines$633
+  passenger1_first_name: John
+  passenger1_last_name: Doe
+  passenger2_first_name: David
+  passenger2_last_name: Doe
+  credit_card_type: Visa
+  credit_card_number: 21343
+record3:
+  username: seleniumguru
+  password: test1234
+  trip_type: roundtrip
+  no_of_passengers: 1
+  depart_city: London
+  depart_month: October
+  depart_day: 21
+  arrival_city: New York
+  return_month: November
+  return_day: 28
+  service_class: Coach
+  airline: No Preference
+  depart_flight: Pangaea Airlines 362
+  return_flight: Unified Airlines 633
+  passenger1_first_name: Don
+  passenger1_last_name: Robert
+  passenger2_first_name: Kelly
+  passenger2_last_name: Robert
+  credit_card_type: Visa
+  credit_card_number: 514123
+record4:
+  username: tutorial
+  password: tutorial
+  trip_type: roundtrip
+  no_of_passengers: 1
+  depart_city: London
+  depart_month: October
+  depart_day: 21
+  arrival_city: New York
+  return_month: November
+  return_day: 28
+  service_class: Business
+  airline: No Preference
+  depart_flight: Pangaea Airlines 362
+  return_flight: Unified Airlines 633
+  passenger1_first_name: Don
+  passenger1_last_name: Robert
+  passenger2_first_name: Kelly
+  passenger2_last_name: Robert
+  credit_card_type: Visa
+  credit_card_number: 514123
+record5:
+  username: selenium
+  password: selenium
+  trip_type: roundtrip
+  no_of_passengers: 1
+record6:
+  username: selenium
+  password: selenium
