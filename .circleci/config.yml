@@ -71,8 +71,6 @@ jobs:
     <<: *defaults
     steps:
       - checkout
-      - *configure_bundler
-      - *restore_bundle_cache
       - *bundle_install
       - *install_firefoxdriver
       - run:
