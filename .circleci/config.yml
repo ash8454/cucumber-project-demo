@@ -83,7 +83,7 @@ store_automation_artifacts: &store_automation_artifacts
 
 version: 2
 jobs:
-  run_automation_tests_in_chrome:
+  chrome_automation_tests:
     docker:
       - image: circleci/ruby:2.4.1-stretch
     parallelism: 2
@@ -106,7 +106,7 @@ jobs:
       - *store_automation_test_results
       - *store_automation_artifacts
       - *save_bundle_cache
-  run_automation_tests_in_firefox:
+  firefox_automation_tests:
     docker:
       - image: circleci/ruby:2.4.1-stretch
     parallelism: 2
@@ -136,13 +136,13 @@ workflows:
   schedule-workflow:
     triggers:
       - schedule:
-          cron: "47 * * * *"
+          cron: "52 * * * *"
           filters:
             branches:
               only:
                 - work-scheduler
     jobs:
-      - run_automation_tests_in_chrome
-      - run_automation_tests_in_firefox:
+      - chrome_automation_tests
+      - firefox_automation_tests:
           requires:
-            - run_automation_tests_in_chrome
+            - chrome_automation_tests
