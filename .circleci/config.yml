@@ -1,6 +1,6 @@
 defaults: &defaults
   docker:
-    - image: circleci/node:jessie-browsers
+    - image: circleci/ruby:2.4.1-stretch
   parallelism: 1
   environment:
     - BUNDLE_PATH: vendor/bundle
@@ -71,6 +71,9 @@ jobs:
     <<: *defaults
     steps:
       - checkout
+      - *configure_bundler
+      - *restore_bundle_cache
+      - *bundle_install
       - *install_firefoxdriver
       - run:
           name: Run Plato Sanity Tests
@@ -78,7 +81,7 @@ jobs:
             mkdir -p test-results/cucumber
             TESTFILES=$(circleci tests glob "features/**/*.feature" | circleci tests split)
             echo ${TESTFILES}
-            xargs -P $CUCUMBER_THREADS -n 1 cucumber --format html --out test-results/cucumber/regression_report.html -- ${TESTFILES}
+            xargs -P $CUCUMBER_THREADS -n 1 bundle exec cucumber BROWSER=firefox --tags "@Firefox" --format html --out test-results/cucumber/regression_report.html -- ${TESTFILES}
       - *store_automation_test_results
       - *store_automation_artifacts
       - *save_bundle_cache
