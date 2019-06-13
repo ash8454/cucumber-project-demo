@@ -1,7 +1,7 @@
 source 'https://rubygems.org'
 # ruby `cat .ruby-version`.to_s
-
-gem 'cucumber', '~> 2.4.0'
+gem 'bundler', '>= 2.0.1'
+gem 'cucumber', '~> 3.1.0'
 # gem 'faker'
 # gem 'pry'
 # gem 'pry-remote'

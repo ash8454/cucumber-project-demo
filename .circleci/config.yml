@@ -1,63 +1,94 @@
-# Ruby CircleCI 2.0 configuration file
-#
-# Check https://circleci.com/docs/2.0/language-ruby/ for more details
-#
+defaults: &defaults
+  docker:
+    - image: circleci/node:jessie-browsers
+  parallelism: 1
+  environment:
+    - BUNDLE_PATH: vendor/bundle
+    - CUCUMBER_THREADS: 4
+
+#install_chromedriver: &install_chromedriver
+#  run:
+#    name: Install Chromedriver latest version
+#    command: |
+#      sudo sed -i '/jessie-updates/d' /etc/apt/sources.list
+#      sudo wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+#      sudo sudo sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list'
+#      sudo apt-get update
+#      sudo apt-get install google-chrome-unstable
+#      sudo wget https://chromedriver.storage.googleapis.com/2.42/chromedriver_linux64.zip
+#      sudo unzip chromedriver_linux64.zip
+#      sudo rm chromedriver_linux64.zip
+#      sudo mv chromedriver /usr/bin/
+#      sudo chmod 777 /usr/bin/chromedriver
+#      sudo apt-get install libxi6 libgconf-2-4
+#      sudo apt-get -y install xvfb gtk2-engines-pixbuf
+#      sudo apt-get -y install xfonts-cyrillic xfonts-100dpi xfonts-75dpi xfonts-base xfonts-scalable
+#      sudo apt-get install xvfb
+#      sudo apt-get -y install imagemagick x11-apps
+install_firefoxdriver: &install_firefoxdriver
+  run:
+    name: Install Firefox latest version
+    command: |
+      curl -O http://selenium-release.storage.googleapis.com/3.5/selenium-server-standalone-3.5.3.jar
+      java -jar selenium-server-standalone-3.5.3.jar -log test-reports/selenium.log
+    background: true
+configure_bundler: &configure_bundler
+  run:
+    name: Configure Bundler
+    command: |
+      echo 'export BUNDLER_VERSION=$(cat Gemfile.lock | tail -1 | tr -d " ")' >> $BASH_ENV
+      source $BASH_ENV
+      gem install bundler
+restore_bundle_cache: &restore_bundle_cache
+  restore_cache:
+    keys:
+      - automation-bundle-{{ checksum "Gemfile.lock" }}
+      - automation-bundle-
+
+save_bundle_cache: &save_bundle_cache
+  save_cache:
+    key: automation-bundle-{{ checksum "Gemfile.lock" }}
+    paths:
+      - vendor/bundle
+
+bundle_install: &bundle_install
+  run:
+    name: Bundle Install
+    command: gem install bundler && bundle check || bundle install
+
+store_automation_test_results: &store_automation_test_results
+  store_test_results:
+    path: test-results
+
+store_automation_artifacts: &store_automation_artifacts
+  store_artifacts:
+    destination: report
+    path: test-results
+
 version: 2
 jobs:
-  build:
-    docker:
-      # specify the version you desire here
-      - image: circleci/ruby:2.4.1-node-browsers
-
-      # Specify service dependencies here if necessary
-      # CircleCI maintains a library of pre-built images
-      # documented at https://circleci.com/docs/2.0/circleci-images/
-      # - image: circleci/postgres:9.4
-
-    working_directory: ~/repo
-
+  run_automation_tests:
+    <<: *defaults
     steps:
       - checkout
-
-      # Download and cache dependencies
-      - restore_cache:
-          keys:
-            - v1-dependencies-{{ checksum "Gemfile.lock" }}
-            # fallback to using the latest cache if no exact match is found
-            - v1-dependencies-
-
+      - *configure_bundler
+      - *restore_bundle_cache
+      - *bundle_install
+      - *install_firefoxdriver
       - run:
-          name: install dependencies
+          name: Run Plato Sanity Tests
           command: |
-            bundle install --jobs=4 --retry=3 --path vendor/bundle
+            mkdir -p test-results/cucumber
+            TESTFILES=$(circleci tests glob "features/**/*.feature" | circleci tests split)
+            echo ${TESTFILES}
+            xargs -P $CUCUMBER_THREADS -n 1 bundle exec cucumber BROWSER=firefox --tags "@Firefox" --format html --out test-results/cucumber/regression_report.html -- ${TESTFILES}
+      - *store_automation_test_results
+      - *store_automation_artifacts
+      - *save_bundle_cache
 
-      - save_cache:
-          paths:
-            - ./vendor/bundle
-          key: v1-dependencies-{{ checksum "Gemfile.lock" }}
+workflows:
+  version: 2
 
-      # Database setup
-      - run: bundle exec rake db:create
-      - run: bundle exec rake db:schema:load
-
-      # run tests!
-      - run:
-          name: run tests
-          command: |
-            mkdir /tmp/test-results
-            TEST_FILES="$(circleci tests glob "spec/**/*_spec.rb" | \
-              circleci tests split --split-by=timings)"
-
-            bundle exec rspec \
-              --format progress \
-              --format RspecJunitFormatter \
-              --out /tmp/test-results/rspec.xml \
-              --format progress \
-              $TEST_FILES
-
-      # collect reports
-      - store_test_results:
-          path: /tmp/test-results
-      - store_artifacts:
-          path: /tmp/test-results
-          destination: test-results
+  automation_tests:
+    jobs:
+      - run_automation_tests
