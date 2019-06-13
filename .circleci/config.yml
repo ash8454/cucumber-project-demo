@@ -78,7 +78,7 @@ jobs:
             mkdir -p test-results/cucumber
             TESTFILES=$(circleci tests glob "features/**/*.feature" | circleci tests split)
             echo ${TESTFILES}
-            xargs -P $CUCUMBER_THREADS -n 1 bundle exec cucumber BROWSER=firefox --tags "@Firefox" --format html --out test-results/cucumber/regression_report.html -- ${TESTFILES}
+            xargs -P $CUCUMBER_THREADS -n 1 cucumber --format html --out test-results/cucumber/regression_report.html -- ${TESTFILES}
       - *store_automation_test_results
       - *store_automation_artifacts
       - *save_bundle_cache
