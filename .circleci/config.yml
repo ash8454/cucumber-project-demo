@@ -1,50 +1,53 @@
-defaults: &defaults
-  docker:
-    - image: circleci/ruby:2.4.2-node-browsers
-      environment:
-        BUNDLE_JOBS: 3
-        BUNDLE_RETRY: 3
-        BUNDLE_PATH: vendor/bundle
-        FIREFOX_VERSION: 57.0.4
-        GECKODRIVER_VERSION: 0.19.1
-  parallelism: 1
-  environment:
-    - BUNDLE_PATH: vendor/bundle
-    - CUCUMBER_THREADS: 4
-
-#install_chromedriver: &install_chromedriver
-#  run:
-#    name: Install Chromedriver latest version
-#    command: |
-#      sudo sed -i '/jessie-updates/d' /etc/apt/sources.list
-#      sudo wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
-#      sudo sudo sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list'
-#      sudo apt-get update
-#      sudo apt-get install google-chrome-unstable
-#      sudo wget https://chromedriver.storage.googleapis.com/2.42/chromedriver_linux64.zip
-#      sudo unzip chromedriver_linux64.zip
-#      sudo rm chromedriver_linux64.zip
-#      sudo mv chromedriver /usr/bin/
-#      sudo chmod 777 /usr/bin/chromedriver
-#      sudo apt-get install libxi6 libgconf-2-4
-#      sudo apt-get -y install xvfb gtk2-engines-pixbuf
-#      sudo apt-get -y install xfonts-cyrillic xfonts-100dpi xfonts-75dpi xfonts-base xfonts-scalable
-#      sudo apt-get install xvfb
-#      sudo apt-get -y install imagemagick x11-apps
+install_chromedriver: &install_chromedriver
+  run:
+    name: Install Chromedriver latest version
+    command: |
+      sudo sed -i '/jessie-updates/d' /etc/apt/sources.list
+      sudo wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+      sudo sudo sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list'
+      sudo apt-get update
+      sudo apt-get install google-chrome-unstable
+      sudo wget https://chromedriver.storage.googleapis.com/2.42/chromedriver_linux64.zip
+      sudo unzip chromedriver_linux64.zip
+      sudo rm chromedriver_linux64.zip
+      sudo mv chromedriver /usr/bin/
+      sudo chmod 777 /usr/bin/chromedriver
+      sudo apt-get install libxi6 libgconf-2-4
+      sudo apt-get -y install xvfb gtk2-engines-pixbuf
+      sudo apt-get -y install xfonts-cyrillic xfonts-100dpi xfonts-75dpi xfonts-base xfonts-scalable
+      sudo apt-get install xvfb
+      sudo apt-get -y install imagemagick x11-apps
 install_firefoxdriver: &install_firefoxdriver
   run:
     name: Install Firefox latest version
     command: |
-      curl -L -o "/tmp/firefox-$FIREFOX_VERSION.tar.bz2" "https://download-installer.cdn.mozilla.net/pub/firefox/releases/$FIREFOX_VERSION/linux-x86_64/en-US/firefox-$FIREFOX_VERSION.tar.bz2"
-      tar -jxf "/tmp/firefox-$FIREFOX_VERSION.tar.bz2" -C "/tmp/"
-      sudo mv "/tmp/firefox" "/opt/firefox-$FIREFOX_VERSION"
-      sudo ln -sf "/opt/firefox-$FIREFOX_VERSION/firefox" "/usr/local/bin/firefox"
-      curl -L -o "/tmp/geckodriver.tar.gz" "https://github.com/mozilla/geckodriver/releases/download/v$GECKODRIVER_VERSION/geckodriver-v$GECKODRIVER_VERSION-linux64.tar.gz"
-      tar -xvzf /tmp/geckodriver.tar.gz -C /tmp/
-      sudo mv "/tmp/geckodriver" "/opt/geckodriver"
-      chmod +x /opt/geckodriver
-      sudo ln -sf "/opt/geckodriver" "/usr/local/bin/geckodriver"
-
+      sudo sed -i '/jessie-updates/d' /etc/apt/sources.list
+      sudo wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+      sudo sudo sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list'
+      sudo apt-get update
+      sudo apt-get install google-chrome-unstable
+      curl -L -o "/tmp/firefox-67.0.tar.bz2" "https://download-installer.cdn.mozilla.net/pub/firefox/releases/67.0/linux-x86_64/en-US/firefox-67.0.tar.bz2"
+      tar -jxf "/tmp/firefox-67.0.tar.bz2" -C "/tmp/"
+      sudo mv "/tmp/firefox" "/opt/firefox-67.0.tar.bz2"
+      sudo ln -sf "/opt/firefox-67.0.tar.bz2/firefox" "/usr/local/bin/firefox"
+      bundle -v
+      sudo apt-get install libxi6 libgconf-2-4
+      sudo apt-get -y install xvfb gtk2-engines-pixbuf
+      sudo apt-get -y install xfonts-cyrillic xfonts-100dpi xfonts-75dpi xfonts-base xfonts-scalable
+      sudo apt-get install xvfb
+      Xvfb :10 -ac & export DISPLAY=:10
+      export $(dbus-launch)
+      export NSS_USE_SHARED_DB=ENABLED
+      firefox &
+install_geckodriver: &install_geckodriver
+  run:
+    name: Install Gecko Driver
+    command: |
+      sudo wget https://github.com/mozilla/geckodriver/releases/download/v0.24.0/geckodriver-v0.24.0-linux64.tar.gz
+      sudo tar -xvzf geckodriver-v0.24.0-linux64.tar.gz -C /opt/
+      sudo rm geckodriver-v0.24.0-linux64.tar.gz
+      sudo mv /opt/geckodriver /usr/bin/
+      sudo chmod 777 /usr/bin/geckodriver
 configure_bundler: &configure_bundler
   run:
     name: Configure Bundler
@@ -80,28 +83,66 @@ store_automation_artifacts: &store_automation_artifacts
 
 version: 2
 jobs:
-  run_automation_tests:
-    <<: *defaults
+  run_automation_tests_in_chrome:
+    docker:
+      - image: circleci/ruby:2.4.1-stretch
+    parallelism: 2
+    environment:
+      - BUNDLE_PATH: vendor/bundle
+      - CUCUMBER_THREADS: 4
+    steps:
+      - checkout
+      - *configure_bundler
+      - *restore_bundle_cache
+      - *bundle_install
+      - *install_chromedriver
+      - run:
+          name: Run Plato Sanity Tests in Chrome Browser
+          command: |
+            mkdir -p test-results/cucumber
+            TESTFILES=$(circleci tests glob "features/**/*.feature" | circleci tests split)
+            echo ${TESTFILES}
+            xargs -P $CUCUMBER_THREADS -n 1 bundle exec cucumber BROWSER=chrome --tags "@Cron" --format html --out test-results/cucumber/regression_report.html -- ${TESTFILES}
+      - *store_automation_test_results
+      - *store_automation_artifacts
+      - *save_bundle_cache
+  run_automation_tests_in_firefox:
+    docker:
+      - image: circleci/ruby:2.4.1-stretch
+    parallelism: 2
+    environment:
+      - BUNDLE_PATH: vendor/bundle
+      - CUCUMBER_THREADS: 4
     steps:
       - checkout
       - *configure_bundler
       - *restore_bundle_cache
       - *bundle_install
       - *install_firefoxdriver
+      - *install_geckodriver
       - run:
-          name: Run Plato Sanity Tests
+          name: Run Plato Sanity Tests in Firefox
           command: |
             mkdir -p test-results/cucumber
             TESTFILES=$(circleci tests glob "features/**/*.feature" | circleci tests split)
             echo ${TESTFILES}
-            xargs -P $CUCUMBER_THREADS -n 1 bundle exec cucumber BROWSER=firefox --tags "@Firefox" --format html --out test-results/cucumber/regression_report.html -- ${TESTFILES}
+            xargs -P $CUCUMBER_THREADS -n 1 bundle exec cucumber BROWSER=firefox --tags "@Cron" --format html --out test-results/cucumber/regression_report.html -- ${TESTFILES}
       - *store_automation_test_results
       - *store_automation_artifacts
       - *save_bundle_cache
 
 workflows:
   version: 2
-
-  automation_tests:
+  schedule-workflow:
+    triggers:
+      - schedule:
+          cron: "47 * * * *"
+          filters:
+            branches:
+              only:
+                - work-scheduler
     jobs:
-      - run_automation_tests
+      - run_automation_tests_in_chrome
+      - run_automation_tests_in_firefox:
+          requires:
+            - run_automation_tests_in_chrome

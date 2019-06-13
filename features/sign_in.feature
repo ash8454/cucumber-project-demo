@@ -1,5 +1,5 @@
 Feature: Logging into the Demo Website
-
+  @Cron
   Scenario Outline: Verifying that the user can login to the Demo Website
     Given I open the website in a browser
     When I login with credentials <username> and <password>
