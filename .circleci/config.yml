@@ -71,7 +71,6 @@ jobs:
     <<: *defaults
     steps:
       - checkout
-      - *bundle_install
       - *install_firefoxdriver
       - run:
           name: Run Plato Sanity Tests
